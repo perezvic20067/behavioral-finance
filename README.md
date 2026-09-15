@@ -16,8 +16,8 @@ Repo de equipo para el proyecto del Módulo 1 del curso de Comportamiento en las
 
 ## Referencias del proyecto
 
-Are Investors Reluctant to Realize Their Losses? Odean, T.
-Trading Is Hazardous to Your Wealth. Barber, B. and Odean, T.
-Do Investors Trade Too Much? Odean, T.
-What Drives the Disposition Effect? Barberis, N. and Xiong, W. 
-Prospect Theory, Mental Accounting, and Momentum. Grinblatt, M. and Han, B.
+- Are Investors Reluctant to Realize Their Losses? Odean, T.
+- Trading Is Hazardous to Your Wealth. Barber, B. and Odean, T.
+- Do Investors Trade Too Much? Odean, T.
+- What Drives the Disposition Effect? Barberis, N. and Xiong, W. 
+- Prospect Theory, Mental Accounting, and Momentum. Grinblatt, M. and Han, B.
