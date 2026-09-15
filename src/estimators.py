@@ -11,9 +11,7 @@ import numpy as np
 import pandas as pd
 
 
-# ---------------------------------------------------------------------------
 # 1. PGR / PLR
-# ---------------------------------------------------------------------------
 
 def compute_pgr_plr_events(positions_df, prices_df):
     """
@@ -150,9 +148,7 @@ def bootstrap_pgr_plr(events_df, n_boot=1000, seed=None, ci=0.90):
     }
 
 
-# ---------------------------------------------------------------------------
 # 2. Retornos bruto/neto y turnover por trader
-# ---------------------------------------------------------------------------
 
 def compute_trader_returns(portfolios_df, positions_df, traders_df, prices_df,
                             commission_rate=0.0005):
@@ -229,9 +225,7 @@ def compute_trader_returns(portfolios_df, positions_df, traders_df, prices_df,
     return trader_stats
 
 
-# ---------------------------------------------------------------------------
 # 3. Regresión de overconfidence (bruto vs. neto)
-# ---------------------------------------------------------------------------
 
 def _ols_simple(x, y):
     """OLS de un solo regresor, con SE/t/p-valor de la pendiente. Sin
@@ -286,9 +280,7 @@ def estimate_overconfidence_regression(trader_stats_df):
     }
 
 
-# ---------------------------------------------------------------------------
 # 4. Wrapper: corre todo el diagnóstico sobre un resultado de run_scenario
-# ---------------------------------------------------------------------------
 
 def estimate_scenario(scenario_result, n_boot=1000, seed=None, commission_rate=0.0005):
     """Toma el dict que regresa scenarios.run_scenario() y calcula PGR/PLR
