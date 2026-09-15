@@ -100,11 +100,16 @@ def generate_scenario_traders(n_traders, delta_range, kappa_range, seed=None):
     separado (escenarios 2-5) o apagarlos en los confounds.
 
     Reusa generate_traders para capital/target_positions (así no se
-    duplica esa parte del diseño ni se toca traders.py)
+    duplica esa parte del diseño ni se toca traders.py). Para delta/kappa
+    usa un stream de aleatoriedad independiente (spawn), en vez de crear
+    otro rng con el mismo seed.
     """
-    base_df = generate_traders(n_traders=n_traders, seed=seed)
+    ss = seed if isinstance(seed, np.random.SeedSequence) else np.random.SeedSequence(seed)
+    traders_seed, delta_kappa_seed = ss.spawn(2)
 
-    rng = np.random.default_rng(seed)
+    base_df = generate_traders(n_traders=n_traders, seed=traders_seed)
+
+    rng = np.random.default_rng(delta_kappa_seed)
     delta_i = rng.uniform(delta_range[0], delta_range[1], n_traders)
     kappa_i = rng.uniform(kappa_range[0], kappa_range[1], n_traders)
 
@@ -125,6 +130,11 @@ Si una subió tanto de precio que ahora sobrepasa el límite permitido en su por
 Las acciones perdedoras no se tocan. Si una acción cae de precio, no se hace nada con ella. Como el sistema no permite meter más dinero ni recomprar acciones, las perdedoras se quedan congeladas en el portafolio.
 La métrica PGR/PLR solo analiza las ventas realizadas. Al vender únicamente las acciones ganadoras para rebalancear, el modelo estadístico cree que el trader tiene el "efecto disposición" (vender lo que gana y aguantar lo que pierde).
 Aunque en realidad no tenga ningún sesgo (δ=0) y solo esté aplicando una regla automática.
+
+El peso objetivo (target_weight) se recalcula en cada revisión como
+1 / (posiciones que siguen abiertas en ese momento para ese trader) —
+no se queda fijo en 1/target_positions original, para que no se "infle"
+artificialmente conforme el portafolio se va achicando.
     """
 
     n_days = prices_df.shape[0]
@@ -133,8 +143,10 @@ Aunque en realidad no tenga ningún sesgo (δ=0) y solo esté aplicando una regl
     positions['exit_day'] = np.nan
     positions['exit_price'] = np.nan
 
-    n_pos_map = traders_df.set_index('trader_id')['target_positions']
-    positions['target_weight'] = 1.0 / positions['trader_id'].map(n_pos_map)
+    delta_map = traders_df.set_index('trader_id')['delta']
+    kappa_map = traders_df.set_index('trader_id')['kappa']
+    positions['delta'] = positions['trader_id'].map(delta_map)
+    positions['kappa'] = positions['trader_id'].map(kappa_map)
 
     for day in range(rebalance_interval, n_days, rebalance_interval):
         open_mask = positions['status'] == 'open'
@@ -153,9 +165,10 @@ Aunque en realidad no tenga ningún sesgo (δ=0) y solo esté aplicando una regl
             'position_value': position_value,
         })
         total_value_by_trader = temp.groupby('trader_id')['position_value'].transform('sum').to_numpy()
+        open_count_by_trader = temp.groupby('trader_id')['position_value'].transform('count').to_numpy()
 
         weight = position_value / total_value_by_trader
-        target_weight = positions.loc[open_idx, 'target_weight'].to_numpy()
+        target_weight = 1.0 / open_count_by_trader
 
         sell_mask = weight > target_weight * (1 + rebalance_band)
         sold_idx = open_idx[sell_mask]
@@ -168,7 +181,7 @@ Aunque en realidad no tenga ningún sesgo (δ=0) y solo esté aplicando una regl
             positions.at[idx, 'exit_day'] = day
             positions.at[idx, 'exit_price'] = exec_price
 
-    return positions.drop(columns=['target_weight'])
+    return positions
 
 
 def simulate_decisions_mean_reversion(portfolios_df, traders_df, prices_df,
@@ -191,7 +204,9 @@ def simulate_decisions_mean_reversion(portfolios_df, traders_df, prices_df,
     positions['exit_day'] = np.nan
     positions['exit_price'] = np.nan
 
+    delta_map = traders_df.set_index('trader_id')['delta']
     kappa_map = traders_df.set_index('trader_id')['kappa']
+    positions['delta'] = positions['trader_id'].map(delta_map)
     positions['kappa'] = positions['trader_id'].map(kappa_map)
 
     for day in range(1, n_days):
@@ -229,7 +244,7 @@ def simulate_decisions_mean_reversion(portfolios_df, traders_df, prices_df,
             positions.at[idx, 'exit_day'] = day
             positions.at[idx, 'exit_price'] = exec_price
 
-    return positions.drop(columns=['kappa'])
+    return positions
 
 
 # orquestador: corre un escenario completo de punta a punta
