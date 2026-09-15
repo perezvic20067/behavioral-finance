@@ -1,0 +1,15 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+
+# Jupyter
+.ipynb_checkpoints/
+
+# macOS
+.DS_Store
+
+# RStudio / R (no usamos R en este proyecto, pero por si acaso)
+.Rhistory
+.RData
+.Rproj.user/
