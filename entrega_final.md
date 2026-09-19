@@ -16,7 +16,7 @@ Para medir estos dos hábitos usamos dos herramientas estadísticas distintas: e
 Creamos un "mercado virtual" bajo reglas estrictas para que los resultados sean naturales y no estén manipulados de antemano.
 
 - **Inversionistas virtuales:** 1,000 inversionistas, cada uno con entre $10,000 y $500,000 dólares para armar un portafolio de 5 a 30 acciones.
-- **Un mercado justo:** simulamos 50 acciones durante 500 días. Regla de oro: las decisiones de los inversionistas *no* alteran los precios del mercado. Esto evita que el sistema "haga trampa" beneficiándose artificialmente de operar mucho.
+- **Un mercado justo:** simulamos 50 acciones durante 500 días. Una regla importante que consideramos fue que las decisiones de los inversionistas no alteranran los precios del mercado. Esto evita que el sistema haga trampa ayudandose de forma artificial al operar mucho.
 - **Costos reales:** agregamos comisión y *spread* (diferencia entre precio de compra y de venta) en cada operación. Sin esto sería imposible medir si el exceso de confianza realmente cuesta dinero.
 - **Personalidades, no reglas rígidas:** a cada trader le asignamos un nivel de δ (disposición) y un nivel de κ (exceso de confianza). Con esa personalidad, el sistema calcula día a día qué tan probable es que venda cada una de sus posiciones, y la decisión de vender es el resultado de esa probabilidad, no una regla fija.
 
