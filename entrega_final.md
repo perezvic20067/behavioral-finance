@@ -50,16 +50,11 @@ En los escenarios de Exceso de Confianza, los inversionistas operaron sin parar.
 Aquí es donde la matemática falla en la vida real. 
 * En el **Escenario 7**, pusimos un robot que simplemente vende las acciones que suben mucho para "rebalancear" el portafolio (una práctica sana y automática). 
 * En el **Escenario 8**, los inversionistas vendían rápido porque creían, por estrategia, que una acción que subió iba a volver a bajar. 
-* **El problema:** Aunque en ambos casos la gente no tenía ningún "miedo psicológico" a perder, la fórmula matemática reportó falsos positivos gigantes, afirmando que sí sufrían del Efecto Disposición.
+* **El problema:** Aunque en ambos casos la gente no tenía ningún "miedo psicológico" a perder, la fórmula matemática reportó falsos positivos, afirmando que sí sufrían del Efecto Disposición.
 
 ---
 
-## 4. Conclusiones y ¿Qué datos nos faltan en el mundo real?
+## 4. Conclusiones
 
 La principal conclusión de este proyecto es que **las fórmulas estadísticas tradicionales son limitadas**. Una fórmula solo sabe *qué* pasó (alguien vendió una acción ganadora), pero no sabe *por qué* pasó (¿fue por estrés emocional, por una regla de su fondo de inversión, o por una estrategia premeditada?).
 
-Para no caer en estas trampas y hacer un análisis psicológico real, los investigadores necesitarían datos mucho más profundos, como:
-
-1. **El tipo de orden (Microestructura):** Saber si el inversionista vendió en un ataque de pánico presionando "Vender ahora" (orden de mercado), o si la venta ocurrió mientras dormía porque dejó una orden programada hace meses.
-2. **Comportamiento en la App:** Analizar cuántas veces al día abre la aplicación el inversionista. Si revisa su cuenta 20 veces al día mientras el mercado cae, es probable que la venta sea emocional.
-3. **Reglas de Inversión:** Identificar si la persona administra un fondo que la obliga por contrato a vender acciones que superen un cierto porcentaje del portafolio (rebalanceo), lo que descartaría por completo un sesgo psicológico.
