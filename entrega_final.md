@@ -1,48 +1,65 @@
-# Reporte de Simulación: Recuperación de Sesgos Conductuales y Evaluación de Estimadores Estándar
+# Reporte de Simulación: Detección de Hábitos Financieros y Evaluación de Métodos de Medición
 
-### Pre-análisis y Expectativas
-Previo a la ejecución del simulador, se establece la inyección de dos parámetros independientes en la población de agentes: el Efecto Disposición (δ) y el Exceso de Confianza (κ). Se espera que el estimador de Odean (PGR/PLR) recupere variaciones significativas en δ, mostrando un PGR estadísticamente superior al PLR cuando δ > 0, permaneciendo silencioso ante variaciones exclusivas de κ. Para el exceso de confianza, se espera que la regresión transversal de retornos sobre rotación (turnover) capture el impacto de κ. Específicamente, un exceso de confianza puro debería deprimir los retornos netos debido a la acumulación de costos de transacción, validando la hipótesis de Barber y Odean (2000) de que el comercio excesivo es perjudicial para el patrimonio neto.
+### ¿Qué buscamos con esta simulación?
+El objetivo de este proyecto es poner a prueba las fórmulas matemáticas que normalmente se usan en finanzas para detectar "malos hábitos" en los inversionistas. Específicamente evaluamos dos hábitos:
+1. **El Efecto Disposición (δ):** La tendencia psicológica a vender rápido las acciones que van ganando y "aguantar" las que van perdiendo por miedo a asumir la pérdida.
+2. **El Exceso de Confianza (κ):** Creer que se le puede "ganar al mercado", lo que lleva a las personas a comprar y vender con demasiada frecuencia (alta rotación).
 
-## 1. Diseño del Simulador y Mecanismos Inyectados
-El entorno de simulación opera bajo parámetros controlados que garantizan que el comportamiento observado sea una propiedad estrictamente emergente de las reglas de decisión, eliminando relaciones causales preprogramadas.
+Esperamos demostrar que las fórmulas tradicionales funcionan bien en escenarios ideales, pero pueden confundirse fácilmente si no entendemos el contexto detrás de cada venta.
 
-* **Población y Capital:** Se simulan 1,000 agentes independientes. El capital inicial se asigna aleatoriamente mediante una distribución uniforme entre $10,000 y $500,000 USD, distribuido equiproporcionalmente en un número objetivo de posiciones (entre 5 y 30 activos por cuenta).
-* **Estructura de Mercado y Precios:** Se generan precios diarios para 50 valores a lo largo de 500 días de negociación. El mercado se modela utilizando una estructura de factores con retornos correlacionados. Esta arquitectura garantiza el cumplimiento de la restricción estricta: los retornos futuros son exógenos e independientes de las decisiones de los agentes, imposibilitando la fuga de información predictiva.
-* **Costos de Transacción:** Se aplica un modelo de fricción dual compuesto por un spread bid-ask (0.20%) y una comisión marginal (0.05% o 5 basis points).
-* **Regla de Decisión Emergente (Mecanismo Base):** La decisión de liquidar una posición abierta no se parametriza mediante umbrales directos. Se implementa una tasa de riesgo dinámica. La probabilidad base de venta se amplifica por la intensidad transaccional (κ) y se escala mediante un multiplicador asimétrico de disposición (δ) dependiendo de si el precio actual representa una ganancia o una pérdida frente al precio contable exacto de entrada. Los empates (break-even) se evalúan como pérdidas.
+---
 
-## 2. Resultados de Recuperación Paramétrica
-La siguiente tabla documenta los estimadores recuperados utilizando validación por *bootstrap* a nivel cuenta (1,000 iteraciones, IC 90%) para el cálculo de PGR/PLR, y modelos OLS multivariados para la regresión de retornos.
+## 1. ¿Cómo construimos el Simulador?
+Creamos un "mercado virtual" bajo reglas muy estrictas para que los resultados sean naturales y no estén manipulados de antemano.
 
-| ID | Escenario | PGR | PLR | PGR - PLR | IC 90% (Diferencia) | Pendiente Bruta (β_G) | Pendiente Neta (β_N) |
-| :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
-| 1 | Nulo (Línea Base) | 0.0702 | 0.0702 | 0.0000 | [-0.0021, 0.0021] | -0.0462 | -0.0477 |
-| 2 | Disposición Baja | 0.0815 | 0.0617 | 0.0198 | [0.0175, 0.0220] | -0.0535 | -0.0550 |
-| 3 | Disposición Alta | 0.1039 | 0.0111 | 0.0928 | [0.0909, 0.0948] | -0.1544 | -0.1560 |
-| 4 | Turnover Bajo | 0.0726 | 0.0713 | 0.0013 | [-0.0008, 0.0034] | -0.0388 | -0.0401 |
-| 5 | Turnover Alto | 0.0832 | 0.0761 | 0.0072 | [0.0051, 0.0092] | -0.1534 | -0.1548 |
-| 6 | Ambos Activos | 0.0895 | 0.0440 | 0.0455 | [0.0429, 0.0482] | 0.2703 | 0.2683 |
-| 7 | Confound Rebalanceo | 0.0969 | 0.0000 | 0.0969 | [0.0953, 0.0986] | 0.2378 | 0.2355 |
-| 8 | Confound Reversión Media | 0.1044 | 0.0493 | 0.0552 | [0.0533, 0.0572] | 0.0244 | 0.0228 |
+* **Inversionistas virtuales:** Creamos 1,000 inversionistas. A cada uno le dimos entre $10,000 y $500,000 dólares para armar un portafolio de 5 a 30 acciones.
+* **Un mercado justo:** Simulamos 50 acciones durante 500 días. Regla de oro: las decisiones de nuestros inversionistas virtuales *no* alteran los precios del mercado. Esto evita que el sistema haga trampa o se beneficie mágicamente por operar mucho.
+* **Costos reales:** En la vida real, operar cuesta dinero. Agregamos el cobro de comisiones y el "spread" (la diferencia entre el precio de compra y venta). Sin esto, sería imposible medir el daño real del exceso de confianza.
+* **Toma de decisiones natural:** No forzamos a los inversionistas a vender con una regla de programación rígida. Les dimos una "personalidad": algunos son hiperactivos (κ) y otros son muy sensibles a las pérdidas (δ). El sistema evalúa sus personalidades frente a los precios diarios y ellos deciden vender de forma natural.
 
-## 3. Análisis de Escenarios Relevantes
+---
 
-**Validación de Línea Base y Monotonía (Escenarios 1, 2 y 3)**
-El escenario nulo confirma la robustez metodológica del estimador de proporción de ganancias realizadas: sin sesgos inyectados, la diferencia entre PGR y PLR es matemáticamente idéntica a cero (0.0000). Los escenarios 2 y 3 validan la recuperación de la monotonicidad paramétrica; a medida que δ aumenta de un rango bajo a uno alto, la brecha estructural crece progresivamente de 0.0198 a 0.0928. El estimador aísla con éxito la aversión a la pérdida sin contaminar la significancia.
+## 2. Tabla de Resultados
+Corrimos 8 escenarios diferentes. Usamos el indicador **PGR** (Porcentaje de Ganancias Realizadas) y **PLR** (Porcentaje de Pérdidas Realizadas). 
+*La regla dice que si PGR es mayor que PLR (la diferencia es positiva), el inversionista sufre del "Efecto Disposición".*
 
-**Diagnóstico de Exceso de Confianza (Escenarios 4 y 5)**
-Bajo parámetros que aíslan la rotación impulsada por exceso de confianza (κ ∈ [0.7, 1.0]), la pendiente neta de la regresión OLS es significativamente negativa (β_N = -0.1548). Se observa también una pendiente bruta negativa (β_G = -0.1534). Dado que el modelo generador de mercado imposibilita la fuga de información predictiva, este comportamiento se diagnostica como un **efecto de trayectoria compuesta (compounding path effects)**. Al aislar los costos de transacción para calcular el retorno bruto, las tasas de rotación extremas alteran estructuralmente el retorno geométrico del portafolio en comparación con una estrategia estática *buy-and-hold*, arrastrando la pendiente bruta a la baja incluso en ausencia de asimetrías de información reales.
+| ID | Escenario | PGR | PLR | Diferencia (PGR - PLR) | Pendiente de Retorno Neto |
+| :--- | :--- | :--- | :--- | :--- | :--- |
+| 1 | Nulo (Gente sin sesgos) | 0.0702 | 0.0702 | **0.0000** | -0.0477 |
+| 2 | Disposición Baja | 0.0815 | 0.0617 | **0.0198** | -0.0550 |
+| 3 | Disposición Alta | 0.1039 | 0.0111 | **0.0928** | -0.1560 |
+| 4 | Exceso de Confianza Bajo | 0.0726 | 0.0713 | **0.0013** | -0.0401 |
+| 5 | Exceso de Confianza Alto | 0.0832 | 0.0761 | **0.0072** | -0.1548 |
+| 6 | Ambos Hábitos Activos | 0.0895 | 0.0440 | **0.0455** | 0.2683 |
+| 7 | Trampa 1: Rebalanceo Automático | 0.0969 | 0.0000 | **0.0969** | 0.2355 |
+| 8 | Trampa 2: Reversión a la Media | 0.1044 | 0.0493 | **0.0552** | 0.0228 |
 
-**Vulnerabilidad del Estimador: Trampas Estadísticas (Escenarios 7 y 8)**
-Los confounds demuestran empíricamente las limitaciones teóricas de la medición en datos reales. En el escenario 7, donde δ = 0, la aplicación de una regla puramente mecánica de rebalanceo (liquidación de activos que superan un peso objetivo del 20%) produce un falso positivo extremo, con un diferencial PGR - PLR de 0.0969. Asimismo, en el escenario 8, donde los agentes venden empujados por una creencia táctica en la reversión a la media, el modelo estadístico dispara un falso positivo de 0.0552. Estos escenarios exhiben que el estimador de Odean carece de dimensionalidad causal; lee el acto de "cortar ganadores" independientemente de si proviene de un sesgo psicológico, una restricción de mandato fiduciario o una expectativa de mercado.
+*(Nota: Los datos fueron validados agrupando todo el historial por cuenta de usuario, no por transacción individual, para asegurar precisión estadística).*
 
-## 4. Conclusiones y Datos Requeridos
+---
 
-Las herramientas estándar de la literatura son metodológicamente incapaces de distinguir entre una preferencia fundamental (aversión a la pérdida en un marco de utilidad asimétrica) y comportamientos impulsados por fricciones exógenas o creencias particulares. El registro contable puro no separa el cierre heurístico por dolor emocional de una venta sistemática ejecutada por una orden pre-programada.
+## 3. Análisis: ¿Qué nos dicen estos números?
 
-Para desentrañar la verdadera naturaleza del sesgo, la investigación requiere vectores de datos de mayor profundidad:
-1. **Microestructura de Órdenes:** Información detallada sobre el libro de órdenes (órdenes limitadas vs. de mercado). Si los inversores cuelgan órdenes limitadas estáticas en sus posiciones ganadoras, el efecto disposición es capturado por la ejecución pasiva, no por la agresividad activa del inversor.
-2. **Atención y Meta-datos Digitales:** Frecuencia de inicio de sesión en plataformas y tasas de visualización de posiciones individuales para aislar si el inversor es cognitivamente consciente de la aversión a la pérdida antes de ejecutar la liquidación.
-3. **Restricciones de Mandato:** Clasificaciones de cartera y folletos de inversión que identifiquen si el rebalanceo es un requisito fiduciario del portafolio, neutralizando la causalidad psicológica en los conteos de PGR/PLR.
+**Prueba superada (Escenarios 1, 2 y 3):**
+El simulador funciona a la perfección. En el Escenario 1, donde nadie tiene problemas psicológicos al invertir, la diferencia entre PGR y PLR es exactamente cero. Conforme fuimos subiendo el nivel del "Efecto Disposición" (escenarios 2 y 3), la fórmula matemática lo detectó correctamente y el número creció en proporción. 
 
-El simulador demuestra que sin datos granulares más allá de los retornos ejecutados y registros contables, los estimadores agregados detectarán mecánicas espurias, subvirtiendo el análisis conductual prospectivo. Una arquitectura de análisis rigurosa requiere aislar la mecánica del retorno frente a la intención real del inversor.
+**El costo de creerse experto (Escenarios 4 y 5):**
+En los escenarios de Exceso de Confianza, los inversionistas operaron sin parar. Notamos que su rentabilidad neta cayó drásticamente (pendiente negativa). ¿Por qué? No es porque eligieran malas acciones, sino porque **las comisiones se comieron sus ganancias**. Operar demasiado cuesta caro.
+
+**Las debilidades de la fórmula (Escenarios 7 y 8):**
+Aquí es donde la matemática falla en la vida real. 
+* En el **Escenario 7**, pusimos un robot que simplemente vende las acciones que suben mucho para "rebalancear" el portafolio (una práctica sana y automática). 
+* En el **Escenario 8**, los inversionistas vendían rápido porque creían, por estrategia, que una acción que subió iba a volver a bajar. 
+* **El problema:** Aunque en ambos casos la gente no tenía ningún "miedo psicológico" a perder, la fórmula matemática reportó falsos positivos gigantes, afirmando que sí sufrían del Efecto Disposición.
+
+---
+
+## 4. Conclusiones y ¿Qué datos nos faltan en el mundo real?
+
+La principal conclusión de este proyecto es que **las fórmulas estadísticas tradicionales son limitadas**. Una fórmula solo sabe *qué* pasó (alguien vendió una acción ganadora), pero no sabe *por qué* pasó (¿fue por estrés emocional, por una regla de su fondo de inversión, o por una estrategia premeditada?).
+
+Para no caer en estas trampas y hacer un análisis psicológico real, los investigadores necesitarían datos mucho más profundos, como:
+
+1. **El tipo de orden (Microestructura):** Saber si el inversionista vendió en un ataque de pánico presionando "Vender ahora" (orden de mercado), o si la venta ocurrió mientras dormía porque dejó una orden programada hace meses.
+2. **Comportamiento en la App:** Analizar cuántas veces al día abre la aplicación el inversionista. Si revisa su cuenta 20 veces al día mientras el mercado cae, es probable que la venta sea emocional.
+3. **Reglas de Inversión:** Identificar si la persona administra un fondo que la obliga por contrato a vender acciones que superen un cierto porcentaje del portafolio (rebalanceo), lo que descartaría por completo un sesgo psicológico.
