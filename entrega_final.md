@@ -26,9 +26,9 @@ Creamos un "mercado virtual" bajo reglas estrictas para que los resultados sean 
 
 Antes de ver la tabla de resultados, definimos las dos columnas que van a aparecer una y otra vez.
 
-**PGR y PLR.** Por cada venta que un trader realiza, comparamos su portafolio ese mismo día: ¿qué fracción de sus posiciones ganadoras vendió (PGR), contra qué fracción de sus posiciones perdedoras vendió (PLR)? Si **PGR es mayor que PLR**, el trader está vendiendo proporcionalmente más ganadoras que perdedoras — la firma clásica del efecto disposición. Si son iguales, no hay sesgo.
+**PGR y PLR.** Por cada venta que un trader realiza, comparamos su portafolio ese mismo día: ¿qué fracción de sus posiciones ganadoras vendió (PGR), contra qué fracción de sus posiciones perdedoras vendió (PLR)? Si **PGR es mayor que PLR**, el trader está vendiendo proporcionalmente más ganadoras que perdedoras, osea el efecto clasico del efecto disposición. Si son iguales significaría que no hay sesgo.
 
-**La pendiente (turnover → retorno).** Aquí corremos una regresión: `retorno = intercepto + pendiente × turnover`, donde turnover es qué fracción de las posiciones de un trader se cerraron durante la simulación. La pendiente responde: "por cada unidad que sube el turnover de un trader, ¿cuánto cambia en promedio su retorno?". La corremos dos veces — contra el retorno **bruto** (sin costos) y contra el retorno **neto** (con comisión) — porque comparar ambas pendientes es el diagnóstico real de exceso de confianza: si ya es negativa en bruto, el problema no son los costos; si además es más negativa en neto, esa diferencia extra sí es el costo de operar.
+**La pendiente (turnover → retorno).** Aquí corremos una regresión: `retorno = intercepto + pendiente × turnover`, donde turnover es qué fracción de las posiciones de un trader se cerraron durante la simulación. La pendiente indica "por cada unidad que sube el turnover de un trader, ¿cuánto cambia en promedio su retorno?". La corremos dos veces, una contra el retorno **bruto** osea el retorno sin costos y otra contra el retorno **neto** osea con las comisiones, esto porque comparar ambas pendientes es el diagnóstico real de que hay un exceso de confianza, si ya es negativa en bruto, el problema no son los costos; si además es más negativa en neto, esa diferencia extra sí es el costo de operar.
 
 ---
 
